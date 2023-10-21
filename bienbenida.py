@@ -1,0 +1,1 @@
+nombre_jugdor = input("ingresar nombre de jugador: ") 
