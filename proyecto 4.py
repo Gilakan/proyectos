@@ -1,86 +1,54 @@
-'''
-Proyecto integrador parte 4
-
-    Implementar una función que reciba el mapa de un laberinto en forma de cadena, y lo convierta a matriz de caracteres.
-        Utiliza el siguiente mapa:
-
-        laberinto = """..###################
-        ....#...............#
-        #.#.#####.#########.#
-        #.#...........#.#.#.#
-        #.#####.#.###.#.#.#.#
-        #...#.#.#.#.....#...#
-        #.#.#.#######.#.#####
-        #.#...#.....#.#...#.#
-        #####.#####.#.#.###.#
-        #.#.#.#.......#...#.#
-        #.#.#.#######.#####.#
-        #...#...#...#.#.#...#
-        ###.#.#####.#.#.###.#
-        #.#...#.......#.....#
-        #.#.#.###.#.#.###.#.#
-        #...#.#...#.#.....#.#
-        ###.#######.###.###.#
-        #.#.#.#.#.#...#.#...#
-        #.#.#.#.#.#.#.#.#.#.#
-        #.....#.....#.#.#.#.#
-        ###################.."""
-
-Los puntos inicial y final deben ser dados al crear el juego, usar las coordenadas (0,0) para el inicio y (len(mapa)-1, len(mapa[0])-1) para el final.
-Recuerdo: Para separar por filas usar split("\n") y para convertir una cadena a una lista de caracteres usar list(cadena).
-
-Escribir una función que limpie la pantalla y muestre la matriz (recibe el mapa en forma de matriz)
-Implementar el main loop en una función (recibe el mapa en forma de matriz)
-
-recibir: mapa List[List[str]], posicion inicial Tuple[int, int], posicion final Tuple[int, int].
-definir dos variavles px y py que contienen las coordenadas del jugador, iniciar como los valores de la posición incial
-procesar mientras (px, py) no coincida con la coordenada final.
-asignar el caracter P en el mapa a las coordenadas (px, py) en todo momento.
-leer del teclado las teclas de flechas, antes de actualizar la posición, verificar si esta posición tentativa:
-No se sale del mapa
-No es una pared
-Si la nueva posición es válida, actualizar (px, py), poner el caracter P en esta nueva coordenada y restaurar la anterior a .
-mostrar
-
-
-'''
 import os
-from readchar import readkey,key
 
-def convertir_laberinto(laberinto):
-    #for fila in laberinto.split("\n"):
-        #print(list(fila))
-    return [list(fila) for fila in laberinto.split("\n")]
+# Función para convertir el mapa de laberinto en una matriz de caracteres
+def parse_labyrinth(labyrinth_str):
+    labyrinth_lines = labyrinth_str.strip().split('\n')
+    labyrinth_matrix = [list(line) for line in labyrinth_lines]
+    return labyrinth_matrix
 
-def limpiar_pantalla():
+# Función para limpiar la pantalla
+def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def mostrar_mapa(mapa):
-    for fila in mapa:
-        print(''.join(fila))
+# Función para mostrar la matriz del laberinto en la pantalla
+def print_labyrinth(labyrinth_matrix):
+    for row in labyrinth_matrix:
+        print(''.join(row))
 
-def main_loop(mapa, posicion_inicial, posicion_final):
-    px, py = posicion_inicial
+# Función que ejecuta el juego
+def main_loop(labyrinth, start, end):
+    px, py = start
 
-    while (px, py) != posicion_final:
-        limpiar_pantalla()
-        mapa[px][py] = 'P'
-        mostrar_mapa(mapa)
-        mapa[px][py] = '.'
+    while (px, py) != end:
+        labyrinth[py][px] = 'P'
+        clear_screen()
+        print_labyrinth(labyrinth)
+        labyrinth[py][px] = '.'
 
-        tecla = readkey()
-        if tecla == key.UP and px > 0 and mapa[px - 1][py] != '#':
-            px -= 1  # Flecha arriba
-        elif tecla == key.DOWN and px < len(mapa) - 1 and mapa[px + 1][py] != '#':
-            px += 1  # Flecha abajo
-        elif tecla == key.LEFT and py > 0 and mapa[px][py - 1] != '#':
-            py -= 1  # Flecha izquierda
-        elif tecla == key.RIGHT and py < len(mapa[0]) - 1 and mapa[px][py + 1] != '#':
-            py += 1  # Flecha derecha
-    print ("Ganaste")
+        move = input("Mueve al jugador con las teclas de flecha (↑, ↓, ←, →): ").lower()
 
-    
-laberinto = """..###################
+        if move == "↑" or move == "w":
+            new_px, new_py = px, py - 1
+        elif move == "↓" or move == "s":
+            new_px, new_py = px, py + 1
+        elif move == "←" or move == "a":
+            new_px, new_py = px - 1, py
+        elif move == "→" or move == "d":
+            new_px, new_py = px + 1, py
+        else:
+            print("Movimiento no válido. Usa las teclas de flecha.")
+            continue
+
+        if 0 <= new_px < len(labyrinth[0]) and 0 <= new_py < len(labyrinth):
+            if labyrinth[new_py][new_px] != '#':
+                px, py = new_px, new_py
+
+    print("¡Has llegado al final del laberinto!")
+
+# Define el laberinto y las posiciones iniciales y finales
+laberinto =
+"""
+..###################
 ....#...............#
 #.#.#####.#########.#
 #.#...........#.#.#.#
@@ -102,7 +70,9 @@ laberinto = """..###################
 #.....#.....#.#.#.#.#
 ###################.."""
 
-mapa = convertir_laberinto(laberinto)
+mapa = parse_labyrinth(laberinto)
 posicion_inicial = (0, 0)
-posicion_final = (len(mapa) - 1, len(mapa[0]) - 1)
+posicion_final = (len(mapa[0]) - 1, len(mapa) - 1)
+
+# Inicia el bucle principal del juego
 main_loop(mapa, posicion_inicial, posicion_final)
