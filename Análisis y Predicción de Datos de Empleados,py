@@ -1,0 +1,113 @@
+# Importar bibliotecas necesarias
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, ConfusionMatrixDisplay
+
+# Cargar el dataset desde el archivo CSV
+df = pd.read_csv('nombre_del_archivo.csv')
+
+# Verificar valores faltantes
+missing_values = df.isnull().sum()
+print("Valores faltantes:\n", missing_values)
+
+# Convertir la columna 'LeaveOrNot' a etiquetas categóricas
+df['LeaveOrNot'] = df['LeaveOrNot'].map({0: 'Not Leave', 1: 'Leave'})
+
+# Eliminar filas con valores faltantes en columnas específicas
+df = df.dropna(subset=['ExperienceInCurrentDomain', 'JoiningYear'])
+
+# Imputar datos faltantes en la columna 'Age' con la media
+df['Age'].fillna(df['Age'].mean(), inplace=True)
+
+# Imputar datos faltantes en la columna 'PaymentTier' con la moda
+df['PaymentTier'].fillna(df['PaymentTier'].mode()[0], inplace=True)
+
+# Eliminar registros con valores atípicos basándose en IQR
+Q1 = df.quantile(0.25)
+Q3 = df.quantile(0.75)
+IQR = Q3 - Q1
+df = df[~((df < (Q1 - 1.5 * IQR)) | (df > (Q3 + 1.5 * IQR))).any(axis=1)]
+
+# Análisis Exploratorio de Datos (EDA)
+
+# Gráfico de torta para la distribución de sexos
+plt.figure(figsize=(8, 8))
+df['Gender'].value_counts().plot.pie(autopct='%1.1f%%', startangle=90, explode=(0.1, 0), labels=['Male', 'Female'])
+plt.title('Distribución de Sexos')
+plt.show()
+
+# Subplots para niveles de estudio
+fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
+
+# Histograma de niveles de estudio
+sns.histplot(df['Education'], ax=axes[0], color='skyblue')
+axes[0].set_title('Distribución de Niveles de Estudio')
+
+# Gráfico de torta para niveles de estudio
+df['Education'].value_counts().plot.pie(autopct='%1.1f%%', startangle=90, explode=(0.1, 0, 0, 0), ax=axes[1])
+axes[1].set_title('Distribución de Niveles de Estudio')
+
+plt.show()
+
+# Histograma para analizar la propensión de los jóvenes a tomar licencias
+plt.figure(figsize=(8, 6))
+sns.histplot(x='Age', hue='LeaveOrNot', data=df, bins=20, multiple='stack', palette='husl')
+plt.title('Propensión de los Jóvenes a Tomar Licencias')
+plt.show()
+
+# Verificar el balance del dataset
+class_distribution = df['LeaveOrNot'].value_counts()
+print("Distribución de clases:\n", class_distribution)
+
+# Modelado de Datos
+
+# Preparar datos para el modelado
+X = df.drop('LeaveOrNot', axis=1)
+y = df['LeaveOrNot']
+X = pd.get_dummies(X)
+
+# Partición estratificada del dataset
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
+
+# Entrenar RandomForests sin cambios
+rf_model = RandomForestClassifier(random_state=42)
+rf_model.fit(X_train, y_train)
+
+# Entrenar RandomForests con class_weight="balanced"
+rf_model_balanced = RandomForestClassifier(class_weight="balanced", random_state=42)
+rf_model_balanced.fit(X_train, y_train)
+
+# Calcular métricas de desempeño para ambos modelos
+def evaluate_model(model, X_train, y_train, X_test, y_test):
+    y_train_pred = model.predict(X_train)
+    y_test_pred = model.predict(X_test)
+    
+    train_accuracy = accuracy_score(y_train, y_train_pred)
+    test_accuracy = accuracy_score(y_test, y_test_pred)
+    
+    f1_train = f1_score(y_train, y_train_pred, average='weighted')
+    f1_test = f1_score(y_test, y_test_pred, average='weighted')
+    
+    print("Accuracy en conjunto de entrenamiento:", train_accuracy)
+    print("Accuracy en conjunto de test:", test_accuracy)
+    print("F1 Score en conjunto de entrenamiento:", f1_train)
+    print("F1 Score en conjunto de test:", f1_test)
+    
+    # Matriz de confusión
+    cm = confusion_matrix(y_test, y_test_pred)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Not Leave', 'Leave'])
+    disp.plot(cmap='Blues', values_format='d')
+    plt.title('Matriz de Confusión')
+    plt.show()
+
+# Evaluar el modelo sin cambios
+print("Resultados del modelo sin cambios:")
+evaluate_model(rf_model, X_train, y_train, X_test, y_test)
+
+# Evaluar el modelo con class_weight="balanced"
+print("Resultados del modelo con class_weight='balanced':")
+evaluate_model(rf_model_balanced, X_train, y_train, X_test, y_test)
