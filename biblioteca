@@ -1,0 +1,77 @@
+import pickle
+from typing import List
+
+class Libro:
+    def __init__(self, titulo: str, autor: str, cantidad: int = 1):
+        self.titulo = titulo
+        self.autor = autor
+        self.cantidad = cantidad
+        self.disponible = True
+
+class Usuario:
+    def __init__(self, nombre: str):
+        self.nombre = nombre
+        self.libros_prestados = []
+
+class Biblioteca:
+    def __init__(self):
+        self.libros = []
+        self.usuarios = []
+
+    def agregar_libro(self, titulo: str, autor: str):
+        for libro in self.libros:
+            if libro.titulo == titulo and libro.autor == autor:
+                libro.cantidad += 1
+                return
+        nuevo_libro = Libro(titulo, autor)
+        self.libros.append(nuevo_libro)
+
+    def mostrar_libros(self):
+        for libro in self.libros:
+            estado = "Disponible" if libro.disponible else "No Disponible"
+            print(f"{libro.titulo} - {libro.autor} - Cantidad: {libro.cantidad} - Estado: {estado}")
+
+    def prestar_libro(self, titulo: str, usuario_nombre: str):
+        # Implementar la lógica para prestar un libro a un usuario
+        pass
+
+    def registrar_usuario(self, nombre: str):
+        nuevo_usuario = Usuario(nombre)
+        self.usuarios.append(nuevo_usuario)
+
+    def guardar_datos(self):
+        with open('datos_biblioteca.pkl', 'wb') as archivo:
+            pickle.dump((self.libros, self.usuarios), archivo)
+
+    def cargar_datos(self):
+        try:
+            with open('datos_biblioteca.pkl', 'rb') as archivo:
+                self.libros, self.usuarios = pickle.load(archivo)
+        except FileNotFoundError:
+            # Inicializar la biblioteca como vacía si el archivo no existe
+            self.libros = []
+            self.usuarios = []
+
+    def listar_usuarios(self):
+        for usuario in self.usuarios:
+            print(usuario.nombre)
+
+# Ejemplo de uso
+biblioteca = Biblioteca()
+biblioteca.cargar_datos()  # Intentar cargar datos previos
+
+# Agregar libros
+biblioteca.agregar_libro("Harry Potter", "J.K. Rowling")
+biblioteca.agregar_libro("El Señor de los Anillos", "J.R.R. Tolkien")
+
+# Mostrar libros
+biblioteca.mostrar_libros()
+
+# Registrar usuario
+biblioteca.registrar_usuario("Alice")
+
+# Guardar datos
+biblioteca.guardar_datos()
+
+# Listar usuarios
+biblioteca.listar_usuarios()
